@@ -5,7 +5,7 @@ Configuration is done at compile-time via ``config.h``.
 DEPENDENCIES
 ============
 
-A vte version >= 0.30.
+A vte version >= 0.32.2.
 
 KEYBINDINGS
 ===========

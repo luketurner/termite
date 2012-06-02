@@ -105,12 +105,12 @@ static void get_vte_padding(VteTerminal *vte, int *w, int *h) {
 }
 
 static char *check_match(VteTerminal *vte, int event_x, int event_y) {
-    int xpad, ypad, tag;
+    int xpad, ypad;
     get_vte_padding(vte, &xpad, &ypad);
     return vte_terminal_match_check(vte,
                                     (event_x - ypad) / vte_terminal_get_char_width(vte),
                                     (event_y - ypad) / vte_terminal_get_char_height(vte),
-                                    &tag);
+                                    NULL);
 }
 
 static gboolean button_press_cb(VteTerminal *vte, GdkEventButton *event) {
