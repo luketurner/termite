@@ -32,7 +32,7 @@ typedef struct keybinding {
 
 
 typedef struct keybinding_list {
-    keybinding default_modifiers;
+    keybinding default_modifier;
     keybinding clipboard_copy;
     keybinding clipboard_paste;
     keybinding search_forward;
@@ -474,7 +474,7 @@ static void load_config(GtkWindow *window, VteTerminal *vte,
             keybinding_parse_string(&cfgstr, keybinding.## KEYNAME) \
         } 
         
-        ADD_KEY_OPTION(default_modifiers)
+        ADD_KEY_OPTION(default_modifier)
         ADD_KEY_OPTION(clipboard_copy)
         ADD_KEY_OPTION(clipboard_paste)
         ADD_KEY_OPTION(search_forward)
