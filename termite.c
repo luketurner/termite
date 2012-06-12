@@ -281,6 +281,8 @@ static bool get_config_ ## NAME (GKeyFile *config, const char *group, const char
     return true; \
 }
 
+#define MAKE_KEY(VAL) GDK_KEY_ ## VAL
+
 MAKE_GET_CONFIG_FUNCTION(boolean, gboolean)
 MAKE_GET_CONFIG_FUNCTION(integer, gint)
 MAKE_GET_CONFIG_FUNCTION(string, gchar *)
