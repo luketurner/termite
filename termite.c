@@ -26,15 +26,21 @@ typedef struct search_panel_info {
     enum overlay_mode mode;
 } search_panel_info;
 
+typedef struct keybinding {
+    guint modifiers;
+    guint key;
+
+
 typedef struct keybinding_list {
-    guint clipboard_copy;
-    guint clipboard_paste;
-    guint search_forward;
-    guint search_forward_url;
-    guint search_reverse;
-    guint search_reverse_url;
-    guint search_prev_match;
-    guint search_next_match;
+    keybinding clipboard_copy;
+    keybinding clipboard_paste;
+    keybinding search_forward;
+    keybinding search_forward_url;
+    keybinding search_reverse;
+    keybinding search_reverse_url;
+    keybinding search_prev_match;
+    keybinding search_next_match;
+    keybinding config_reload
 }
 
 static gchar *browser_cmd[3] = {NULL};
@@ -73,40 +79,52 @@ void window_title_cb(VteTerminal *vte, GtkWindow *window) {
 gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *info keybinding_list *keys) {
     const guint modifiers = event->state & gtk_accelerator_get_default_mod_mask();
     gboolean dynamic_title = FALSE, urgent_on_bell = FALSE, clickable_url = FALSE;
-    if (modifiers == (GDK_CONTROL_MASK|GDK_SHIFT_MASK)) {
-        switch (gdk_keyval_to_lower(event->keyval)) {
-            case keys->clipboard_copy:
-                vte_terminal_copy_clipboard(vte);
-                return TRUE;
-            case keys->clipboard_paste:
-                vte_terminal_paste_clipboard(vte);
-                return TRUE;
-            case keys->search_prev_match:
-                vte_terminal_search_find_previous(vte);
-                vte_terminal_copy_primary(vte);
-                return TRUE;
-            case keys->search_next_match:
-                vte_terminal_search_find_next(vte);
-                vte_terminal_copy_primary(vte);
-                return TRUE;
-            case keys->search_forward:
-                overlay_show(info, OVERLAY_SEARCH, true);
-                return TRUE;
-            case keys->search_reverse:
-                overlay_show(info, OVERLAY_RSEARCH, true);
-                return TRUE;
-            case keys->search_forward_url:
-                search(vte, url_regex, false);
-                return TRUE;
-            case keys->search_reverse_url:
-                search(vte, url_regex, true);
-                return TRUE;
-            case GDK_KEY_Escape:
-                load_config(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte))),
-                            vte, &dynamic_title, &urgent_on_bell,
-                            &clickable_url, NULL);
-                return TRUE;
-        }
+    keyval = gdk_keyval_to_lower(event->keyval);
+
+    #define KEY_MATCHES(KEY) \
+        keyval == keys->## key .key && modifiers == keys->## key .modifiers
+    if (KEY_MATCHES(clipboard_copy)) {
+        vte_terminal_copy_clipboard(vte);
+        return TRUE;
+    }
+    if (KEY_MATCHES(clipboard_paste)) {
+        vte_terminal_paste_clipboard(vte);
+        return TRUE;
+    }
+    if (KEY_MATCHES(search_next_match)) {
+        vte_terminal_search_find_next(vte);
+        vte_terminal_copy_primary(vte);
+        return TRUE;
+    }
+    if (KEY_MATCHES(search_prev_match)) {
+        vte_terminal_search_find_previous(vte);
+        vte_terminal_copy_primary(vte);
+        return TRUE;
+    }
+    if (KEY_MATCHES(search_forward)) {
+        overlay_show(info, OVERLAY_SEARCH, true);
+        return TRUE;
+    }
+    if (KEY_MATCHES(search_forward_url)) {
+        search(vte, url_regex, false);
+        return TRUE;
+    }
+    if (KEY_MATCHES(search_reverse)) {
+        overlay_show(info, OVERLAY_RSEARCH, true);
+        return TRUE;
+    }
+    if (KEY_MATCHES(search_reverse_url)) {
+        search(vte, url_regex, true);
+        return TRUE;
+    }
+    if (KEY_MATCHES(config_reload)) {
+        load_config(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte))),
+                    vte, &dynamic_title, &urgent_on_bell,
+                    &clickable_url, NULL);
+    }
+
+    #undef KEY_MATCHES
+
     } else if (modifiers == GDK_CONTROL_MASK && event->keyval == GDK_KEY_Tab) {
         overlay_show(info, OVERLAY_COMPLETION, true);
         return TRUE;
@@ -463,6 +481,7 @@ static void load_config(GtkWindow *window, VteTerminal *vte,
         ADD_KEY_OPTION(search_reverse_url)
         ADD_KEY_OPTION(search_next_match)
         ADD_KEY_OPTION(search_prev_match)
+        ADD_KEY_OPTION(config_reload)
 
         #undef ADD_KEY_OPTION
 
