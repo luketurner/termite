@@ -29,13 +29,12 @@ typedef struct search_panel_info {
 typedef struct keybinding_list {
     guint clipboard_copy;
     guint clipboard_paste;
-    guint unicode_input;
     guint search_forward;
     guint search_forward_url;
     guint search_reverse;
     guint search_reverse_url;
-    guint search_prev;
-    guint search_next;
+    guint search_prev_match;
+    guint search_next_match;
 }
 
 static gchar *browser_cmd[3] = {NULL};
@@ -82,11 +81,11 @@ gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *i
             case keys->clipboard_paste:
                 vte_terminal_paste_clipboard(vte);
                 return TRUE;
-            case keys->search_prev:
+            case keys->search_prev_match:
                 vte_terminal_search_find_previous(vte);
                 vte_terminal_copy_primary(vte);
                 return TRUE;
-            case keys->search_next:
+            case keys->search_next_match:
                 vte_terminal_search_find_next(vte);
                 vte_terminal_copy_primary(vte);
                 return TRUE;
@@ -450,9 +449,23 @@ static void load_config(GtkWindow *window, VteTerminal *vte,
         }
 
         /* keybinding config loading */
-        if (get_config_string(config, "keybindings", "clipboard_copy", &cfgstr)) {
-            keybindings->clipboard_copy = &cfgstr;
-        }
+
+        #define ADD_KEY_OPTION(KEYNAME) \
+        if (get_config_string(config, "keybindings", #KEYNAME, &cfgstr)) { \
+            int hexed = keybinding_convert_to_hex(cfgstr); \
+            keybinding_is_valid(#KEYNAME) && keybindings->## KEYNAME = &cfgstr; \
+        } 
+
+        ADD_KEY_OPTION(clipboard_copy)
+        ADD_KEY_OPTION(clipboard_paste)
+        ADD_KEY_OPTION(search_forward)
+        ADD_KEY_OPTION(search_forward_url)
+        ADD_KEY_OPTION(search_reverse)
+        ADD_KEY_OPTION(search_reverse_url)
+        ADD_KEY_OPTION(search_next_match)
+        ADD_KEY_OPTION(search_prev_match)
+
+        #undef ADD_KEY_OPTION
 
         /* AND SO ON FOR MANY BINDINGS */
     }
