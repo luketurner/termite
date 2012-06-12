@@ -452,8 +452,7 @@ static void load_config(GtkWindow *window, VteTerminal *vte,
 
         #define ADD_KEY_OPTION(KEYNAME) \
         if (get_config_string(config, "keybindings", #KEYNAME, &cfgstr)) { \
-            int hexed = keybinding_convert_to_hex(cfgstr); \
-            keybinding_is_valid(#KEYNAME) && keybindings->## KEYNAME = &cfgstr; \
+            keybinding_is_valid(#KEYNAME) && keybindings->## KEYNAME = cfgstr; \
         } 
 
         ADD_KEY_OPTION(clipboard_copy)
@@ -471,7 +470,8 @@ static void load_config(GtkWindow *window, VteTerminal *vte,
     }
     g_free(path);
     g_key_file_free(config);
-}/*}}}*/
+}
+/*}}}*/
 
 int main(int argc, char **argv) {
     GError *error = NULL;
