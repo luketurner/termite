@@ -50,7 +50,7 @@ static gchar *browser_cmd[3] = {NULL};
 static void launch_browser(char *url);
 
 static void window_title_cb(VteTerminal *vte, GtkWindow *window);
-static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *info);
+static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *info, keybinding_list *keys);
 static gboolean entry_key_press_cb(GtkEntry *entry, GdkEventKey *event, search_panel_info *info);
 static gboolean position_overlay_cb(GtkBin *overlay, GtkWidget *widget, GdkRectangle *alloc);
 static gboolean button_press_cb(VteTerminal *vte, GdkEventButton *event);
@@ -65,7 +65,8 @@ static void get_vte_padding(VteTerminal *vte, int *w, int *h);
 static char *check_match(VteTerminal *vte, int event_x, int event_y);
 static void load_config(GtkWindow *window, VteTerminal *vte,
                         gboolean *dynamic_title, gboolean *urgent_on_bell,
-                        gboolean *clickable_url, const gchar **term);
+                        gboolean *clickable_url, const gchar **term, keybinding_list *keybindings);
+void keybinding_parse_string(gchar *key_string, keybinding *keybind);
 
 void launch_browser(char *url) {
     browser_cmd[1] = url;
@@ -78,7 +79,7 @@ void window_title_cb(VteTerminal *vte, GtkWindow *window) {
     gtk_window_set_title(window, t ? t : "termite");
 }
 
-gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *info keybinding_list *keys) {
+gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *info, keybinding_list *keys) {
     const guint modifiers = event->state & gtk_accelerator_get_default_mod_mask();
     gboolean dynamic_title = FALSE, urgent_on_bell = FALSE, clickable_url = FALSE;
     keyval = gdk_keyval_to_lower(event->keyval);
@@ -501,7 +502,6 @@ static void load_config(GtkWindow *window, VteTerminal *vte,
     g_free(path);
     g_key_file_free(config);
 }
-/*}}}*/
 
 /* Note: Only accepts bindings of the form (Ctrl|Mod1)\+*{KEY} 
  * where {KEY} can be any single ascii character, Space, or Escape*/
@@ -548,7 +548,7 @@ void keybinding_parse_string(gchar *key_string, keybinding *keybind) {
     strncmp(key_id, "Mod1", 4) && modifiers = GDK_MOD1_MASK & modifiers;
 
     keybind->modifiers = modifiers;
-}
+}/*}}}*/
 
 
 int main(int argc, char **argv) {
