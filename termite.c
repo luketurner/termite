@@ -32,7 +32,7 @@ typedef struct keybinding {
 
 
 typedef struct keybinding_list {
-    guint default_modifiers;
+    keybinding default_modifiers;
     keybinding clipboard_copy;
     keybinding clipboard_paste;
     keybinding search_forward;
@@ -469,15 +469,12 @@ static void load_config(GtkWindow *window, VteTerminal *vte,
 
         /* keybinding config loading */
 
-        if (get_config_string(config, "keybindings", "default_modifiers", &cfgstr)) {
-            keybindings->default_modifiers = keybinding_parse_string(&cfgstr);
-        }
-
         #define ADD_KEY_OPTION(KEYNAME) \
         if (get_config_string(config, "keybindings", #KEYNAME, &cfgstr)) { \
             keybinding_parse_string(&cfgstr, keybinding.## KEYNAME) \
         } 
-
+        
+        ADD_KEY_OPTION(default_modifiers)
         ADD_KEY_OPTION(clipboard_copy)
         ADD_KEY_OPTION(clipboard_paste)
         ADD_KEY_OPTION(search_forward)
@@ -505,6 +502,7 @@ bool keybinding_parse_string(gchar *key_string, keybinding *keybind) {
     char token = key_string[0];
     int string_index = 0;
     guint modifiers = gtk_accelerator_get_default_mod_mask();
+
     while (token) {
         if (token == '+') {
             /* + used to separate modifiers and keys */
@@ -532,6 +530,10 @@ bool keybinding_parse_string(gchar *key_string, keybinding *keybind) {
     key_index == 1 && keybind->key = key_id[0];
     strncmp(key_id, "Space", 5) && keybind->key = 32;
     strncmp(key_id, "Escape", 6) && keybind->key = 27;
+
+    strncmp(key_id, "Ctrl", 5) && modifiers = GDK_CONTROL_MASK & modifiers;
+    strncmp(key_id, "Mod1", 5) && modifiers = GDK_MOD1_MASK & modifiers;
+
     keybind->modifiers = modifiers;
     return true;
 }
