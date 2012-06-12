@@ -26,6 +26,18 @@ typedef struct search_panel_info {
     enum overlay_mode mode;
 } search_panel_info;
 
+typedef struct keybinding_list {
+    guint clipboard_copy;
+    guint clipboard_paste;
+    guint unicode_input;
+    guint search_forward;
+    guint search_forward_url;
+    guint search_reverse;
+    guint search_reverse_url;
+    guint search_prev;
+    guint search_next;
+}
+
 static gchar *browser_cmd[3] = {NULL};
 
 static void launch_browser(char *url);
@@ -59,35 +71,35 @@ void window_title_cb(VteTerminal *vte, GtkWindow *window) {
     gtk_window_set_title(window, t ? t : "termite");
 }
 
-gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *info) {
+gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *info keybinding_list *keys) {
     const guint modifiers = event->state & gtk_accelerator_get_default_mod_mask();
     gboolean dynamic_title = FALSE, urgent_on_bell = FALSE, clickable_url = FALSE;
     if (modifiers == (GDK_CONTROL_MASK|GDK_SHIFT_MASK)) {
         switch (gdk_keyval_to_lower(event->keyval)) {
-            case GDK_KEY_c:
+            case keys->clipboard_copy:
                 vte_terminal_copy_clipboard(vte);
                 return TRUE;
-            case GDK_KEY_v:
+            case keys->clipboard_paste:
                 vte_terminal_paste_clipboard(vte);
                 return TRUE;
-            case GDK_KEY_p:
+            case keys->search_prev:
                 vte_terminal_search_find_previous(vte);
                 vte_terminal_copy_primary(vte);
                 return TRUE;
-            case GDK_KEY_n:
+            case keys->search_next:
                 vte_terminal_search_find_next(vte);
                 vte_terminal_copy_primary(vte);
                 return TRUE;
-            case GDK_KEY_f:
+            case keys->search_forward:
                 overlay_show(info, OVERLAY_SEARCH, true);
                 return TRUE;
-            case GDK_KEY_r:
+            case keys->search_reverse:
                 overlay_show(info, OVERLAY_RSEARCH, true);
                 return TRUE;
-            case GDK_KEY_j:
+            case keys->search_forward_url:
                 search(vte, url_regex, false);
                 return TRUE;
-            case GDK_KEY_k:
+            case keys->search_reverse_url:
                 search(vte, url_regex, true);
                 return TRUE;
             case GDK_KEY_Escape:
@@ -281,7 +293,6 @@ static bool get_config_ ## NAME (GKeyFile *config, const char *group, const char
     return true; \
 }
 
-#define MAKE_KEY(VAL) GDK_KEY_ ## VAL
 
 MAKE_GET_CONFIG_FUNCTION(boolean, gboolean)
 MAKE_GET_CONFIG_FUNCTION(integer, gint)
@@ -290,7 +301,7 @@ MAKE_GET_CONFIG_FUNCTION(double, gdouble)
 
 static void load_config(GtkWindow *window, VteTerminal *vte,
                         gboolean *dynamic_title, gboolean *urgent_on_bell,
-                        gboolean *clickable_url, const gchar **term) {
+                        gboolean *clickable_url, const gchar **term, keybinding_list *keybindings) {
 
     static const char *filename = "termite.cfg";
     const gchar *dir = g_get_user_config_dir();
@@ -437,6 +448,13 @@ static void load_config(GtkWindow *window, VteTerminal *vte,
             }
             g_free(cfgstr);
         }
+
+        /* keybinding config loading */
+        if (get_config_string(config, "keybindings", "clipboard_copy", &cfgstr)) {
+            keybindings->clipboard_copy = &cfgstr;
+        }
+
+        /* AND SO ON FOR MANY BINDINGS */
     }
     g_free(path);
     g_key_file_free(config);
@@ -498,8 +516,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    keybinding_list keybindings;
+
     load_config(GTK_WINDOW(window), VTE_TERMINAL(vte), &dynamic_title,
-                &urgent_on_bell, &clickable_url, &term);
+                &urgent_on_bell, &clickable_url, &term, &keybindings);
 
     vte_terminal_set_pty_object(VTE_TERMINAL(vte), pty);
     vte_pty_set_term(pty, term);
@@ -532,7 +552,7 @@ int main(int argc, char **argv) {
 
     g_signal_connect(window,  "destroy",            G_CALLBACK(gtk_main_quit), NULL);
     g_signal_connect(vte,     "child-exited",       G_CALLBACK(gtk_main_quit), NULL);
-    g_signal_connect(vte,     "key-press-event",    G_CALLBACK(key_press_cb), &info);
+    g_signal_connect(vte,     "key-press-event",    G_CALLBACK(key_press_cb), &info, &keybindings);
     g_signal_connect(entry,   "key-press-event",    G_CALLBACK(entry_key_press_cb), &info);
     g_signal_connect(overlay, "get-child-position", G_CALLBACK(position_overlay_cb), NULL);
 
