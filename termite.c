@@ -610,6 +610,7 @@ int main(int argc, char **argv) {
     }
 
     keybinding_list keybindings;
+    keybindings.default_modifier.modifiers = gtk_accelerator_get_default_mod_mask();
 
     load_config(GTK_WINDOW(window), VTE_TERMINAL(vte), &dynamic_title,
                 &urgent_on_bell, &clickable_url, &term, &keybindings);
