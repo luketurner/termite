@@ -66,7 +66,7 @@ static char *check_match(VteTerminal *vte, int event_x, int event_y);
 static void load_config(GtkWindow *window, VteTerminal *vte,
                         gboolean *dynamic_title, gboolean *urgent_on_bell,
                         gboolean *clickable_url, const gchar **term, keybinding_list *keybindings);
-void keybinding_parse_string(gchar *key_string, keybinding *keybind);
+static void keybinding_parse_string(gchar *key_string, keybinding *keybind);
 
 void launch_browser(char *url) {
     browser_cmd[1] = url;
