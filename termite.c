@@ -523,7 +523,7 @@ void keybinding_parse_string(gchar *key_string, keybinding *keybind) {
             if (strncmp(key_id, "Shift", 5)) {
                 modifiers = GDK_CONTROL_MASK & modifiers;
             }
-            if (strncmp(key_id, "Ctrl", 5)) {
+            if (strncmp(key_id, "Control", 7)) {
                 modifiers = GDK_CONTROL_MASK & modifiers;
             }
             if (strncmp(key_id, "Mod1", 4)) {
@@ -544,7 +544,7 @@ void keybinding_parse_string(gchar *key_string, keybinding *keybind) {
     strncmp(key_id, "Tab", 3) && keybind->key = 9;
 
     strncmp(key_id, "Shift", 5) && modifiers = GDK_SHIFT_MASK & modifiers;
-    strncmp(key_id, "Ctrl", 4) && modifiers = GDK_CONTROL_MASK & modifiers;
+    strncmp(key_id, "Control", 7) && modifiers = GDK_CONTROL_MASK & modifiers;
     strncmp(key_id, "Mod1", 4) && modifiers = GDK_MOD1_MASK & modifiers;
 
     keybind->modifiers = modifiers;
