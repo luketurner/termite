@@ -505,7 +505,7 @@ static void load_config(GtkWindow *window, VteTerminal *vte,
 
 /* Note: Only accepts bindings of the form (Ctrl|Mod1)\+*{KEY} 
  * where {KEY} can be any single ascii character, Space, or Escape*/
-bool keybinding_parse_string(gchar *key_string, keybinding *keybind) {
+void keybinding_parse_string(gchar *key_string, keybinding *keybind) {
     char key_id[10];
     int key_index = 0;
     char token = key_string[0];
@@ -515,10 +515,9 @@ bool keybinding_parse_string(gchar *key_string, keybinding *keybind) {
     while (token) {
         if (token == '+') {
             /* + used to separate modifiers and keys */
-            if (key_id[0]) {
+            if (key_id[0] == NULL) {
                 /* they must want a real +, e.g. Ctrl++ */ 
                 keybind->key = token;
-                return true;
                 }
             /* Quirk: Would match e.g. ShiftWTF with Shift*/
             if (strncmp(key_id, "Shift", 5)) {
@@ -542,14 +541,13 @@ bool keybinding_parse_string(gchar *key_string, keybinding *keybind) {
     key_index == 1 && keybind->key = key_id[0];
     strncmp(key_id, "Space", 5) && keybind->key = 32;
     strncmp(key_id, "Escape", 6) && keybind->key = 27;
-    strncmp(key_id, "Tab", 6) && keybind->key = 9;
+    strncmp(key_id, "Tab", 3) && keybind->key = 9;
 
     strncmp(key_id, "Shift", 5) && modifiers = GDK_SHIFT_MASK & modifiers;
-    strncmp(key_id, "Ctrl", 5) && modifiers = GDK_CONTROL_MASK & modifiers;
-    strncmp(key_id, "Mod1", 5) && modifiers = GDK_MOD1_MASK & modifiers;
+    strncmp(key_id, "Ctrl", 4) && modifiers = GDK_CONTROL_MASK & modifiers;
+    strncmp(key_id, "Mod1", 4) && modifiers = GDK_MOD1_MASK & modifiers;
 
     keybind->modifiers = modifiers;
-    return true;
 }
 
 
