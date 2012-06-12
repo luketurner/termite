@@ -29,7 +29,7 @@ typedef struct search_panel_info {
 typedef struct keybinding {
     guint modifiers;
     guint key;
-
+}
 
 typedef struct keybinding_list {
     keybinding default_modifier;
@@ -41,7 +41,7 @@ typedef struct keybinding_list {
     keybinding search_reverse_url;
     keybinding search_prev_match;
     keybinding search_next_match;
-    keybinding config_reload
+    keybinding config_reload;
     keybinding scrollback_completion;
 }
 
@@ -86,9 +86,9 @@ gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *i
     /* If the key has no modifiers (i.e. only default mod mask) 
      * THEN we check the default modifiers. */
     #define KEY_MATCHES(KEY) \
-        keyval == keys->## key .key && \
+        keyval == keys-> ## key .key && \
         ((modifiers == gtk_accelerator_get_default_mod_mask() && \
-          modifiers == keys->## key .modifiers) || \
+          modifiers == keys-> ## key .modifiers) || \
           modifiers == keys->default_modifier.modifiers)
 
     if (KEY_MATCHES(clipboard_copy)) {
@@ -132,12 +132,12 @@ gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *i
         return TRUE;
     }
 
-    #undef KEY_MATCHES
-
     if (KEY_MATCHES(scrollback_completion)) {
         overlay_show(info, OVERLAY_COMPLETION, true);
         return TRUE;
     }
+
+    #undef KEY_MATCHES
     return FALSE;
 }
 
