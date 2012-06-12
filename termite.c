@@ -42,6 +42,7 @@ typedef struct keybinding_list {
     keybinding search_prev_match;
     keybinding search_next_match;
     keybinding config_reload
+    keybinding scrollback_completion;
 }
 
 static gchar *browser_cmd[3] = {NULL};
@@ -82,8 +83,14 @@ gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *i
     gboolean dynamic_title = FALSE, urgent_on_bell = FALSE, clickable_url = FALSE;
     keyval = gdk_keyval_to_lower(event->keyval);
 
+    /* If the key has no modifiers (i.e. only default mod mask) 
+     * THEN we check the default modifiers. */
     #define KEY_MATCHES(KEY) \
-        keyval == keys->## key .key && modifiers == keys->## key .modifiers
+        keyval == keys->## key .key && \
+        ((modifiers == gtk_accelerator_get_default_mod_mask() && \
+          modifiers == keys->## key .modifiers) || \
+          modifiers == keys->default_modifier.modifiers)
+
     if (KEY_MATCHES(clipboard_copy)) {
         vte_terminal_copy_clipboard(vte);
         return TRUE;
@@ -122,11 +129,12 @@ gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *i
         load_config(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte))),
                     vte, &dynamic_title, &urgent_on_bell,
                     &clickable_url, NULL);
+        return TRUE;
     }
 
     #undef KEY_MATCHES
 
-    } else if (modifiers == GDK_CONTROL_MASK && event->keyval == GDK_KEY_Tab) {
+    if (KEY_MATCHES(scrollback_completion)) {
         overlay_show(info, OVERLAY_COMPLETION, true);
         return TRUE;
     }
@@ -484,6 +492,7 @@ static void load_config(GtkWindow *window, VteTerminal *vte,
         ADD_KEY_OPTION(search_next_match)
         ADD_KEY_OPTION(search_prev_match)
         ADD_KEY_OPTION(config_reload)
+        ADD_KEY_OPTION(scrollback_completion)
 
         #undef ADD_KEY_OPTION
 
@@ -512,6 +521,9 @@ bool keybinding_parse_string(gchar *key_string, keybinding *keybind) {
                 return true;
                 }
             /* Quirk: Would match e.g. ShiftWTF with Shift*/
+            if (strncmp(key_id, "Shift", 5)) {
+                modifiers = GDK_CONTROL_MASK & modifiers;
+            }
             if (strncmp(key_id, "Ctrl", 5)) {
                 modifiers = GDK_CONTROL_MASK & modifiers;
             }
@@ -530,7 +542,9 @@ bool keybinding_parse_string(gchar *key_string, keybinding *keybind) {
     key_index == 1 && keybind->key = key_id[0];
     strncmp(key_id, "Space", 5) && keybind->key = 32;
     strncmp(key_id, "Escape", 6) && keybind->key = 27;
+    strncmp(key_id, "Tab", 6) && keybind->key = 9;
 
+    strncmp(key_id, "Shift", 5) && modifiers = GDK_SHIFT_MASK & modifiers;
     strncmp(key_id, "Ctrl", 5) && modifiers = GDK_CONTROL_MASK & modifiers;
     strncmp(key_id, "Mod1", 5) && modifiers = GDK_MOD1_MASK & modifiers;
 
