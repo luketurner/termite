@@ -8,20 +8,20 @@ DEPENDENCIES
 
 A vte version >= 0.30.
 
-KEYBINDINGS
-===========
+DEFAULT KEYBINDINGS
+===================
 
-* ``ctrl-shift-escape``: reload configuration file
-* ``ctrl-shift-c``: copy to CLIPBOARD
-* ``ctrl-shift-v``: paste from CLIPBOARD
-* ``ctrl-shift-u``: unicode input (standard GTK binding)
-* ``ctrl-shift-f``: start forward search
-* ``ctrl-shift-b``: start reverse search
-* ``ctrl-shift-j``: start forward url search
-* ``ctrl-shift-k``: start reverse url search
-* ``ctrl-shift-n``: jump to next search match
-* ``ctrl-shift-p``: jump to previous search match
-* ``ctrl-tab``: start scrollback completion
+* ``Control+Shift+Escape``: reload configuration file
+* ``Control+Shift+c``: copy to CLIPBOARD
+* ``Control+Shift+v``: paste from CLIPBOARD
+* ``Control+Shift+u``: unicode input (standard GTK binding)
+* ``Control+Shift+f``: start forward search
+* ``Control+Shift+b``: start reverse search
+* ``Control+Shift+j``: start forward url search
+* ``Control+Shift+k``: start reverse url search
+* ``Control+Shift+n``: jump to next search match
+* ``Control+Shift+p``: jump to previous search match
+* ``Control+Tab``: start scrollback completion
 
 During scrollback search, the current selection is changed to the search match
 and copied to the PRIMARY clipboard buffer.
