@@ -45,12 +45,19 @@ typedef struct keybinding_list {
     keybinding scrollback_completion;
 } keybinding_list;
 
+/* for GTK callback function */
+typedef struct key_press_data {
+    keybinding_list *keys;
+    search_panel_info *info;
+} key_press_data;
+
+
 static gchar *browser_cmd[3] = {NULL};
 
 static void launch_browser(char *url);
 
 static void window_title_cb(VteTerminal *vte, GtkWindow *window);
-static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *info, keybinding_list *keys);
+static gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, key_press_data *data);
 static gboolean entry_key_press_cb(GtkEntry *entry, GdkEventKey *event, search_panel_info *info);
 static gboolean position_overlay_cb(GtkBin *overlay, GtkWidget *widget, GdkRectangle *alloc);
 static gboolean button_press_cb(VteTerminal *vte, GdkEventButton *event);
@@ -79,7 +86,11 @@ void window_title_cb(VteTerminal *vte, GtkWindow *window) {
     gtk_window_set_title(window, t ? t : "termite");
 }
 
-gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *info, keybinding_list *keys) {
+gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, key_press_data *data) {
+    /* unpack data struct */
+    keybinding_list *keys = data->keys;
+    search_panel_info *info = data->info;
+
     const guint modifiers = event->state & gtk_accelerator_get_default_mod_mask();
     gboolean dynamic_title = FALSE, urgent_on_bell = FALSE, clickable_url = FALSE;
     guint keyval = gdk_keyval_to_lower(event->keyval);
@@ -642,10 +653,15 @@ int main(int argc, char **argv) {
     gtk_container_add(GTK_CONTAINER(window), overlay);
 
     search_panel_info info = {vte, entry, GTK_BIN(alignment), OVERLAY_HIDDEN};
+   
+    /* Create data pack for keypress callback */
+    key_press_data keypress_data;
+    keypress_data.keys = &keybindings;
+    keypress_data.info = &info;
 
     g_signal_connect(window,  "destroy",            G_CALLBACK(gtk_main_quit), NULL);
     g_signal_connect(vte,     "child-exited",       G_CALLBACK(gtk_main_quit), NULL);
-    g_signal_connect(vte,     "key-press-event",    G_CALLBACK(key_press_cb), &info, &keybindings);
+    g_signal_connect(vte,     "key-press-event",    G_CALLBACK(key_press_cb), &keypress_data);
     g_signal_connect(entry,   "key-press-event",    G_CALLBACK(entry_key_press_cb), &info);
     g_signal_connect(overlay, "get-child-position", G_CALLBACK(position_overlay_cb), NULL);
 
