@@ -527,7 +527,7 @@ void keybinding_parse_string(gchar *key_string, keybinding *keybind) {
     while (token) {
         if (token == '+') {
             /* + used to separate modifiers and keys */
-            if (key_id[0]) {
+            if (key_id[0] == 0) {
                 /* they must want a real +, e.g. Ctrl++ */ 
                 keybind->key = token;
                 }
@@ -541,7 +541,7 @@ void keybinding_parse_string(gchar *key_string, keybinding *keybind) {
             if (strncmp(key_id, "Mod1", 4)) {
                 modifiers = GDK_MOD1_MASK & modifiers;
             }
-            key_id[0] = NULL;
+            key_id[0] = 0;
             key_index = 0;
         } else {
             if (key_index < 10) key_id[key_index] = token;
