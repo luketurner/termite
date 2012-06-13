@@ -29,7 +29,7 @@ typedef struct search_panel_info {
 typedef struct keybinding {
     guint modifiers;
     guint key;
-}
+} keybinding;
 
 typedef struct keybinding_list {
     keybinding default_modifier;
@@ -43,7 +43,7 @@ typedef struct keybinding_list {
     keybinding search_next_match;
     keybinding config_reload;
     keybinding scrollback_completion;
-}
+} keybinding_list;
 
 static gchar *browser_cmd[3] = {NULL};
 
@@ -82,14 +82,14 @@ void window_title_cb(VteTerminal *vte, GtkWindow *window) {
 gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *info, keybinding_list *keys) {
     const guint modifiers = event->state & gtk_accelerator_get_default_mod_mask();
     gboolean dynamic_title = FALSE, urgent_on_bell = FALSE, clickable_url = FALSE;
-    keyval = gdk_keyval_to_lower(event->keyval);
+    guint keyval = gdk_keyval_to_lower(event->keyval);
 
     /* If the key has no modifiers (i.e. only default mod mask) 
      * THEN we check the default modifiers. */
     #define KEY_MATCHES(KEY) \
-        keyval == keys-> ## key .key && \
+        keyval == keys->KEY.key && \
         ((modifiers == gtk_accelerator_get_default_mod_mask() && \
-          modifiers == keys-> ## key .modifiers) || \
+          modifiers == keys->KEY.modifiers) || \
           modifiers == keys->default_modifier.modifiers)
 
     if (KEY_MATCHES(clipboard_copy)) {
@@ -129,7 +129,7 @@ gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, search_panel_info *i
     if (KEY_MATCHES(config_reload)) {
         load_config(GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(vte))),
                     vte, &dynamic_title, &urgent_on_bell,
-                    &clickable_url, NULL);
+                    &clickable_url, NULL, keys);
         return TRUE;
     }
 
@@ -480,7 +480,8 @@ static void load_config(GtkWindow *window, VteTerminal *vte,
 
         #define ADD_KEY_OPTION(KEYNAME) \
         if (get_config_string(config, "keybindings", #KEYNAME, &cfgstr)) { \
-            keybinding_parse_string(&cfgstr, keybinding.## KEYNAME) \
+            keybinding_parse_string(cfgstr, &(keybindings->KEYNAME)); \
+            g_free(cfgstr); \
         } 
         
         ADD_KEY_OPTION(default_modifier)
@@ -515,7 +516,7 @@ void keybinding_parse_string(gchar *key_string, keybinding *keybind) {
     while (token) {
         if (token == '+') {
             /* + used to separate modifiers and keys */
-            if (key_id[0] == NULL) {
+            if (key_id[0]) {
                 /* they must want a real +, e.g. Ctrl++ */ 
                 keybind->key = token;
                 }
@@ -532,20 +533,20 @@ void keybinding_parse_string(gchar *key_string, keybinding *keybind) {
             key_id[0] = NULL;
             key_index = 0;
         } else {
-            key_index < 10 && key_id[key_index] = token;
+            if (key_index < 10) key_id[key_index] = token;
             key_index++;
         }
         string_index++;
         token = key_string[string_index];
     }
-    key_index == 1 && keybind->key = key_id[0];
-    strncmp(key_id, "Space", 5) && keybind->key = 32;
-    strncmp(key_id, "Escape", 6) && keybind->key = 27;
-    strncmp(key_id, "Tab", 3) && keybind->key = 9;
+    if (key_index == 1) keybind->key = key_id[0];
+    if (strncmp(key_id, "Space", 5)) keybind->key = 32;
+    if (strncmp(key_id, "Escape", 6)) keybind->key = 27;
+    if (strncmp(key_id, "Tab", 3)) keybind->key = 9;
 
-    strncmp(key_id, "Shift", 5) && modifiers = GDK_SHIFT_MASK & modifiers;
-    strncmp(key_id, "Control", 7) && modifiers = GDK_CONTROL_MASK & modifiers;
-    strncmp(key_id, "Mod1", 4) && modifiers = GDK_MOD1_MASK & modifiers;
+    if (strncmp(key_id, "Shift", 5)) modifiers = GDK_SHIFT_MASK & modifiers;
+    if (strncmp(key_id, "Control", 7)) modifiers = GDK_CONTROL_MASK & modifiers;
+    if (strncmp(key_id, "Mod1", 4)) modifiers = GDK_MOD1_MASK & modifiers;
 
     keybind->modifiers = modifiers;
 }/*}}}*/
