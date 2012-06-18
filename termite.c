@@ -488,6 +488,11 @@ static void load_config(GtkWindow *window, VteTerminal *vte,
         }
 
         /* keybinding config loading */
+        /* The macro argument should be the name of the key
+         * in the keyconfigs struct, and it loads a config key
+         * of the same name.
+         * This could maybe be automated by iterating over the 
+         * member elements of the struct */
 
         #define ADD_KEY_OPTION(KEYNAME) \
         if (get_config_string(config, "keybindings", #KEYNAME, &cfgstr)) { \
@@ -515,8 +520,8 @@ static void load_config(GtkWindow *window, VteTerminal *vte,
     g_key_file_free(config);
 }
 
-/* Note: Only accepts bindings of the form (Ctrl|Mod1)\+*{KEY} 
- * where {KEY} can be any single ascii character, Space, or Escape*/
+/* Note: Only accepts bindings of the form (Shift|Control|Mod1)\+*{KEY} 
+ * where {KEY} can be any single ascii character, Space, Tab, or Escape*/
 void keybinding_parse_string(gchar *key_string, keybinding *keybind) {
     char key_id[10];
     int key_index = 0;
@@ -531,14 +536,13 @@ void keybinding_parse_string(gchar *key_string, keybinding *keybind) {
                 /* they must want a real +, e.g. Ctrl++ */ 
                 keybind->key = token;
                 }
-            /* Quirk: Would match e.g. ShiftWTF with Shift*/
-            if (strncmp(key_id, "Shift", 5)) {
+            if (strcmp(key_id, "Shift")) {
                 modifiers = GDK_CONTROL_MASK & modifiers;
             }
-            if (strncmp(key_id, "Control", 7)) {
+            if (strcmp(key_id, "Control")) {
                 modifiers = GDK_CONTROL_MASK & modifiers;
             }
-            if (strncmp(key_id, "Mod1", 4)) {
+            if (strcmp(key_id, "Mod1")) {
                 modifiers = GDK_MOD1_MASK & modifiers;
             }
             key_id[0] = 0;
@@ -551,13 +555,13 @@ void keybinding_parse_string(gchar *key_string, keybinding *keybind) {
         token = key_string[string_index];
     }
     if (key_index == 1) keybind->key = key_id[0];
-    if (strncmp(key_id, "Space", 5)) keybind->key = 32;
-    if (strncmp(key_id, "Escape", 6)) keybind->key = 27;
-    if (strncmp(key_id, "Tab", 3)) keybind->key = 9;
+    if (strcmp(key_id, "Space")) keybind->key = 32;
+    if (strcmp(key_id, "Escape")) keybind->key = 27;
+    if (strcmp(key_id, "Tab")) keybind->key = 9;
 
-    if (strncmp(key_id, "Shift", 5)) modifiers = GDK_SHIFT_MASK & modifiers;
-    if (strncmp(key_id, "Control", 7)) modifiers = GDK_CONTROL_MASK & modifiers;
-    if (strncmp(key_id, "Mod1", 4)) modifiers = GDK_MOD1_MASK & modifiers;
+    if (strcmp(key_id, "Shift")) modifiers = GDK_SHIFT_MASK & modifiers;
+    if (strcmp(key_id, "Control")) modifiers = GDK_CONTROL_MASK & modifiers;
+    if (strcmp(key_id, "Mod1")) modifiers = GDK_MOD1_MASK & modifiers;
 
     keybind->modifiers = modifiers;
 }/*}}}*/
