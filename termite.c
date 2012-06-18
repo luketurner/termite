@@ -87,7 +87,6 @@ void window_title_cb(VteTerminal *vte, GtkWindow *window) {
 }
 
 gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, key_press_data *data) {
-    /* unpack data struct */
     keybinding_list *keys = data->keys;
     search_panel_info *info = data->info;
 
@@ -99,9 +98,9 @@ gboolean key_press_cb(VteTerminal *vte, GdkEventKey *event, key_press_data *data
      * THEN we check the default modifiers. */
     #define KEY_MATCHES(KEY) \
         keyval == keys->KEY.key && \
-        ((modifiers == gtk_accelerator_get_default_mod_mask() && \
-          modifiers == keys->KEY.modifiers) || \
-          modifiers == keys->default_modifier.modifiers)
+        ((keys->KEY.modifiers == gtk_accelerator_get_default_mod_mask() && \
+          modifiers == keys->default_modifier.modifiers) || \
+          modifiers == keys->KEY.modifiers)
 
     if (KEY_MATCHES(clipboard_copy)) {
         vte_terminal_copy_clipboard(vte);
